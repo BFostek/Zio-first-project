@@ -5,19 +5,16 @@ import zio.http.Server
 import sttp.tapir.server.ziohttp.{ZioHttpInterpreter, ZioHttpServerOptions}
 
 object Application extends ZIOAppDefault {
-  val helthEndpoint = endpoint
-    .tag("health")
-    .name("health")
-    .description("health check")
-    .get
-    .in("health")
-    .out(plainBody[String])
-    .serverLogicSuccess[Task](_ => ZIO.succeed("All good!"))
 
-  val serverProgram = Server.serve(
-    ZioHttpInterpreter(
-      ZioHttpServerOptions.default
-    ).toHttp(helthEndpoint)
+  val serverProgram = for {
+    controller <- HealthController.makeZIO
+    server <- Server.serve(
+      ZioHttpInterpreter(
+        ZioHttpServerOptions.default
+      ).toHttp(controller.health)
+    )
+  } yield ()
+  override def run: ZIO[Any & (ZIOAppArgs & Scope), Any, Any] = serverProgram.provide(
+    Server.default
   )
-  override def run: ZIO[Any & (ZIOAppArgs & Scope), Any, Any] = Console.printLine("Olá mundo!")
 }
