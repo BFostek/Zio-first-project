@@ -36,6 +36,48 @@ object CompanyControllerSpec extends ZIOSpecDefault {
       })
       // inspect http response
       //
+    },
+    test("get all") {
+      val program = for {
+        controller <- CompanyController.makeZIO
+        // build tapir backend
+        backendStub <- ZIO.succeed(
+          TapirStubInterpreter(SttpBackendStub(zioMonadError))
+            .whenServerEndpointRunLogic(controller.getAll)
+            .backend()
+        )
+        response <- basicRequest
+          .get(uri"/companies")
+          .body()
+          .send(backendStub)
+      } yield response.body
+      assertZIO(program)(Assertion.assertion("inspect http response from getAll") { respBody =>
+        println(respBody.toOption.flatMap(_.fromJson[Company].toOption))
+        respBody.toOption
+          .flatMap(_.fromJson[List[Company]].toOption)
+          .contains(List())
+      })
+
+    },
+    test("get by id") {
+      val program = for {
+        controller <- CompanyController.makeZIO
+        // build tapir backend
+        backendStub <- ZIO.succeed(
+          TapirStubInterpreter(SttpBackendStub(zioMonadError))
+            .whenServerEndpointRunLogic(controller.getById)
+            .backend()
+        )
+        response <- basicRequest
+          .get(uri"/companies/1")
+          .send(backendStub)
+      } yield response.body
+      assertZIO(program)(Assertion.assertion("inspect http response from get by id") { respBody =>
+        respBody.toOption
+          .flatMap(_.fromJson[Company].toOption)
+          .isEmpty
+      })
+
     }
   )
 

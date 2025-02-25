@@ -15,6 +15,7 @@ object Application extends ZIOAppDefault {
     )
   } yield ()
   override def run: ZIO[Any & (ZIOAppArgs & Scope), Any, Any] = serverProgram.provide(
-    Server.default
+    Server.default,
+    CompanyService.dummyLayer
   )
 }
