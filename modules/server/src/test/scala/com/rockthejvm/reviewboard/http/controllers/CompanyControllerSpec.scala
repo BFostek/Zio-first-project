@@ -9,9 +9,15 @@ import sttp.tapir.generic.auto.*
 import zio.json.*
 object CompanyControllerSpec extends ZIOSpecDefault {
   private given zioMonadError: MonadError[Task] = new RIOMonadError[Any]
+  private val serviceStub = new CompanyService {
+    override def create(req: CreateCompanyRequest): Task[Company] = ???
+    override def getAll: Task[List[Company]]                      = ???
+    override def getBySlug(slug: String): Task[Option[Company]]   = ???
+    override def getById(id: Long): Task[Option[Company]]         = ???
+  }
+
   override def spec: Spec[TestEnvironment & Scope, Any] = suite("CompanyControllerSpec")(
     test("post company") {
-
       // create the controller
       val program = for {
         controller <- CompanyController.makeZIO
@@ -80,5 +86,6 @@ object CompanyControllerSpec extends ZIOSpecDefault {
 
     }
   )
+  .provide(ZLayer.succeed(serviceStub))
 
 }
